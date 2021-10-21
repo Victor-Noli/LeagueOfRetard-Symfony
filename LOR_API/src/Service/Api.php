@@ -17,27 +17,51 @@ class Api
             {
 
                 if (isset($data)) {
+                    echo '<pre>';
                     var_dump($data);
-                    if (array_key_exists("game_id", $data)) {
+                    echo '</pre>';
+                    if (array_key_exists("gameId", $data)) {
                         $gameId = $data["gameId"];
                     }
 
-                    if (array_key_exists("username", $data)) {
-                        $gameId = $data["username"];
-                    }
+                    // if (array_key_exists("pseudo", $data)) {
+                    //     $pseudo = $data["pseudo"];
+                    // }
 
                     if (array_key_exists("role", $data)) {
-                        $gameId = $data["role"];
+                        $role = $data["role"];
                     }
 
                     if (array_key_exists("lane", $data)) {
-                        $gameId = $data["lane"];
+                        $lane = $data["lane"];
                     }
+
+                    if (array_key_exists("champion", $data)) {
+                        $champion = $data["champion"];
+                    }
+
+                    if (array_key_exists("season", $data)) {
+                        $season = $data["season"];
+                    }
+
+                    // if (array_key_exists("timeStamp", $data)) {
+                    //     $timeStamp = $data["timeStamp"];
+                    // }
                     
-                    // $array = $dm->getRepository(InfosPersoLOL::class)->find([
-                    //     "gameId => $gameId"
-                    // ]);
+                    // $array = $dm->getRepository(InfosPersoLOL::class)->find($gameId);
                     // var_dump($array);
+                    $array = new InfosPersoLOL();
+
+                    $array->setGameId($gameId);
+                    // $array->setPseudo($pseudo);
+                    $array->setRole($role);
+                    $array->setLane($lane);
+                    $array->setChampion($champion);
+                    $array->setSeason($season);
+                    // $array->setTimeStamp($timeStamp);
+
+                    $dm->persist($array);
+                    $dm->flush();
                 }
             }
     }
