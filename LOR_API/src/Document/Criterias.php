@@ -14,32 +14,32 @@ use Symfony\Component\Validator\Constraints as Assert;
         /**
          * @MongoDB\Id
          */
-        protected $id;
+        public $id;
 
         /**
          * @MongoDB\Field(type="string")
          */
-        protected $pseudo;
+        public $pseudo;
 
         /**
          * @MongoDB\Field(type="string")
          */
-        protected $gameId;
+        public $gameId;
 
         /**
          * @MongoDB\Field(type="string")
          */
-        protected $kill;
+        public $kill;
 
         /**
          * @MongoDB\Field(type="string")
          */
-        protected $death;
+        public $death;
 
         /**
          * @MongoDB\Field(type="string")
          */
-        protected $assist;
+        public $assist;
 
 
         public function setPseudo(string $pseudo): void

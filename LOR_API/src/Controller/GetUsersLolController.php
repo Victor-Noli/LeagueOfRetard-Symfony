@@ -26,26 +26,18 @@ class GetUsersLolController extends AbstractController
         $queryMe = $dm->getRepository(InfosPersoLOL::class)->findBy(['pseudo' => 'azerty']);
         $queryComplementary = $dm->getRepository(Complementary::class)->findBy([]);
 
-        
-        echo '<pre>';
-    //    dd($queryPlayerAlgo);
-        echo '</pre>';
         return $this->json([
             'message' => 'Welcome to your new controller!',
             'path' => 'src/Controller/GetUsersLolController.php',
-            'result' => $this->predictifChoiceGamer('SOLO', 101, 'MID', $queryMe, $queryInfosPersoLol, false, [], [], $dm, $queryPlayerAlgo, $queryComplementary),
+            'result' => $this->predictifChoiceGamer('SOLO', 101, 'MID', $queryMe, $queryInfosPersoLol, true, [], [], $dm, $queryPlayerAlgo, $queryComplementary, $queryCriteria),
         ]);
     }
-
     
-    public function predictifChoiceGamer($role, $champion, $lane, $arrayMyProfil, $arrayProfil, $isStats, $arrayComplementaire, $arrayResult, $dm, $queryPlayerAlgo, $queryComplementary){
+    public function predictifChoiceGamer($role, $champion, $lane, $arrayMyProfil, $arrayProfil, $isStats, $arrayComplementaire, $arrayResult, $dm, $queryPlayerAlgo, $queryComplementary, $queryCriteria){
        
          $timeStampResult = [];
          $arrayNonComplementaire = [];
-         $relance = false;
-         $resultHighScore = false;
          $arrayImportant = [];
-         $arrayHightScore = [];
          $arrayCompo = [];
          $timeStamp = '';
          $data = $queryComplementary ? $queryComplementary : $arrayProfil;
@@ -104,77 +96,165 @@ class GetUsersLolController extends AbstractController
          }
          
          if ($isStats) {
-              // return $this->kda($arrayComplementaire);
+
+              return $this->kda($arrayComplementaire, $role, $champion, $lane, $arrayMyProfil, $arrayImportant, $dm, $queryPlayerAlgo, $queryComplementary, $queryCriteria);
             } else {
-               if (count($arrayComplementaire) > 1) {
-                   for ($v = 0; $v < count($arrayComplementaire); $v++) {
-                    if ($arrayComplementaire[$v]->{'score'} >= 100) {
-                         $resultHighScore = true;
-                         array_push($arrayHightScore, $arrayComplementaire[$v]);
-                      } else {
-                         $relance = true;
-                         array_push($arrayImportant, $arrayComplementaire[$v]);
-                      }
-                   }
-                   } else {
-                       if (!$arrayResult) {
-                            array_push($arrayResult, $arrayComplementaire);
-                       }
+                return $this->toResult($arrayComplementaire, $arrayResult, $role, $champion, $lane, $arrayMyProfil, $arrayImportant, $dm, $queryPlayerAlgo, $queryComplementary, $queryCriteria);
+             
+            }
+     }
+
+     public function toResult($arrayComplementaire, $arrayResult, $role, $champion, $lane, $arrayMyProfil, $arrayImportant, $dm, $queryPlayerAlgo, $queryComplementary, $queryCriteria) {
+         
+        $relance = false;
+        $resultHighScore = false;
+        $arrayHightScore = [];
+        if (count($arrayComplementaire) > 1) {
+            for ($v = 0; $v < count($arrayComplementaire); $v++) {
+             if ($arrayComplementaire[$v]->{'score'} >= 100) {
+                  $resultHighScore = true;
+                  array_push($arrayHightScore, $arrayComplementaire[$v]);
+               } else {
+                  $relance = true;
+                  array_push($arrayImportant, $arrayComplementaire[$v]);
                }
             }
-            if ($relance && !$arrayResult) {
-                return $this->predictifChoiceGamer($role, $champion, $lane, $arrayMyProfil, $arrayImportant, [], [], $arrayResult, false, $dm, $queryPlayerAlgo, $queryComplementary);
-            }
-            if ($resultHighScore && !$arrayResult) {
-                $high = array_rand($arrayHightScore, 1);
-                array_push($arrayResult, $arrayHightScore[$high]);                
-            }
-            echo '<pre>';
-            var_dump($arrayComplementaire);
-            echo '</pre>';
-            if ($arrayComplementaire) {
-                $dm->createQueryBuilder(Complementary::class)
-                ->remove()
-                ->getQuery()
-                ->execute();
-                for ($c = 0; $c < count($arrayComplementaire); $c++) {
-                    $pseudo = $arrayComplementaire[$c]->{'pseudo'};
-                    $gameId = $arrayComplementaire[$c]->{'gameId'};
-                    $laneResult = $arrayComplementaire[$c]->{'lane'};
-                    $roleResult = $arrayComplementaire[$c]->{'role'};
-                    $championResult = $arrayComplementaire[$c]->{'champion'};
-                    $season = $arrayComplementaire[$c]->{'season'};
-                    $score = $arrayComplementaire[$c]->{'score'};
-                    $timeStampRes = $arrayComplementaire[$c]->{'timeStamp'};
-
-                        $array = new Complementary();
-                        $array->setGameId($gameId);
-                        $array->setPseudo($pseudo);
-                        $array->setRole($roleResult);
-                        $array->setLane($laneResult);
-                        $array->setChampion($championResult);
-                        $array->setSeason($season);
-                        $array->setTimeStamp($timeStampRes);
-                        $array->setScore($score);
-                        
-                        $dm->persist($array);
+            } else {
+                if (!$arrayResult && $arrayComplementaire) {
+                     array_push($arrayResult, $arrayComplementaire);
                 }
-                $dm->persist($array); 
-            }
-            echo '<pre>';
-            var_dump($arrayComplementaire);
-            echo '</pre>';
-         if ($arrayResult) {
-            $dm->createQueryBuilder(PlayerAlgo::class)
-                ->remove()
-                ->getQuery()
-                ->execute();
-             $pseudo = $arrayResult[0]->{'pseudo'};
-             $array = new PlayerAlgo();
-             $array->setPseudo($pseudo);
-             $dm->persist($array);
-         }
-         $dm->flush();
-         return $arrayResult;
+        }
+        if ($relance && !$arrayResult) {
+            return $this->predictifChoiceGamer($role, $champion, $lane, $arrayMyProfil, $arrayImportant, [], [], $arrayResult, false, $dm, $queryPlayerAlgo, $queryComplementary, $queryCriteria);
+        }
+        if ($resultHighScore && !$arrayResult) {
+            $high = array_rand($arrayHightScore, 1);
+            array_push($arrayResult, $arrayHightScore[$high]);                
+        }
+        
+     return $this->result($arrayComplementaire, $dm, $arrayResult);
      }
+
+     public function result($arrayComplementaire, $dm, $arrayResult) {
+        if ($arrayComplementaire) {
+            $dm->createQueryBuilder(Complementary::class)
+            ->remove()
+            ->getQuery()
+            ->execute();
+            for ($c = 0; $c < count($arrayComplementaire); $c++) {
+                $pseudo = $arrayComplementaire[$c]->{'pseudo'};
+                $gameId = $arrayComplementaire[$c]->{'gameId'};
+                $laneResult = $arrayComplementaire[$c]->{'lane'};
+                $roleResult = $arrayComplementaire[$c]->{'role'};
+                $championResult = $arrayComplementaire[$c]->{'champion'};
+                $season = $arrayComplementaire[$c]->{'season'};
+                $score = $arrayComplementaire[$c]->{'score'};
+                $timeStampRes = $arrayComplementaire[$c]->{'timeStamp'};
+
+                    $array = new Complementary();
+                    $array->setGameId($gameId);
+                    $array->setPseudo($pseudo);
+                    $array->setRole($roleResult);
+                    $array->setLane($laneResult);
+                    $array->setChampion($championResult);
+                    $array->setSeason($season);
+                    $array->setTimeStamp($timeStampRes);
+                    $array->setScore($score);
+                    
+                    $dm->persist($array);
+            }
+            $dm->persist($array); 
+        }
+     if ($arrayResult) {
+        $dm->createQueryBuilder(PlayerAlgo::class)
+            ->remove()
+            ->getQuery()
+            ->execute();
+         $pseudo = $arrayResult[0]->{'pseudo'};
+         $array = new PlayerAlgo();
+         $array->setPseudo($pseudo);
+         $dm->persist($array);
+     } else {
+        $dm->createQueryBuilder(Complementary::class)
+        ->remove()
+        ->getQuery()
+        ->execute();
+        $dm->createQueryBuilder(PlayerAlgo::class)
+            ->remove()
+            ->getQuery()
+            ->execute();
+     }
+     $dm->flush();
+     return $arrayResult;
+     }
+
+     public function kda($arrayComplementaire, $role, $champion, $lane, $arrayMyProfil, $arrayImportant, $dm, $queryPlayerAlgo, $queryComplementary, $queryCriteria) {
+
+        $arrayGoodCriteria = [];
+        $arrayResultKda = [];
+        $arrayVeryHigh = [];
+        $arrayHigh = [];
+        $arrayMedium = [];
+        $arrayLow = [];
+        $newArrayComplementaire = [];
+        for ($i = 0; $i < count($arrayComplementaire); $i++) {
+            for ($v = 0; $v < count($queryCriteria); $v++) {
+                if (ucfirst($arrayComplementaire[$i]->{'pseudo'}) === ucfirst($queryCriteria[$v]->{'pseudo'})) {
+                    array_push($arrayGoodCriteria, $queryCriteria[$v]);
+                }
+            }
+        }
+        for ($p = 0; $p < count($arrayGoodCriteria); $p++) {
+            $kda = ($arrayGoodCriteria[$p]->{'kill'} + $arrayGoodCriteria[$p]->{'assist'}) / $arrayGoodCriteria[$p]->{'death'};
+            switch ($kda) {
+                case ($kda >= 5):
+                    $arrayGoodCriteria[$p]->{'kda'} = $kda;
+                    array_push($arrayVeryHigh, $arrayGoodCriteria[$p]);
+                    break;
+                case ($kda >= 3 && $kda < 5):
+                    $arrayGoodCriteria[$p]->{'kda'} = $kda;
+                    array_push($arrayHigh, $arrayGoodCriteria[$p]);
+                    break;
+                case ($kda >= 1 && $kda < 3):
+                    $arrayGoodCriteria[$p]->{'kda'} = $kda;
+                    array_push($arrayMedium, $arrayGoodCriteria[$p]);
+                    break;
+                case ($kda < 1):
+                    $arrayGoodCriteria[$p]->{'kda'} = $kda;
+                    array_push($arrayLow, $arrayGoodCriteria[$p]);
+                    break;
+            }
+            
+        }
+
+        switch (true) {
+            case ($arrayVeryHigh):
+                $array = array_rand($arrayVeryHigh, 1);
+                array_push($arrayResultKda, $arrayVeryHigh[$array]); 
+                break;
+            case ($arrayHigh):
+                $array = array_rand($arrayHigh, 1);
+                array_push($arrayResultKda, $arrayHigh[$array]); 
+                break;
+            case ($arrayMedium):
+                $array = array_rand($arrayMedium, 1);
+                array_push($arrayResultKda, $arrayMedium[$array]); 
+                break;
+            case ($arrayLow):
+                $array = array_rand($arrayLow, 1);
+                array_push($arrayResultKda, $arrayLow[$array]); 
+                break;
+        }
+        if ($arrayResultKda) {
+        for ($a = 0; $a < count($arrayComplementaire); $a++) {
+            if (ucfirst($arrayComplementaire[$a]->{'pseudo'}) !== ucfirst($arrayResultKda[0]->{'pseudo'})) {
+                array_push($newArrayComplementaire, $arrayComplementaire[$a]);
+            }
+        }
+        
+       return $this->result($newArrayComplementaire, $dm, $arrayResultKda);
+     } else {
+        return $this->toResult($arrayComplementaire, $arrayResultKda, $role, $champion, $lane, $arrayMyProfil, $arrayImportant, $dm, $queryPlayerAlgo, $queryComplementary, $queryCriteria);
+     }
+    }
 }

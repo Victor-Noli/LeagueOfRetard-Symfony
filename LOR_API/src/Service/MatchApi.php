@@ -31,7 +31,6 @@ class MatchApi
             for ($v = 0; $v < count($arraySumonnerName); $v++) {
                 
                 for ($p = 0; $p < count($json['participants']); $p++) {
-                      var_dump($json['participantIdentities'][$p]['player']["summonerName"]);
                     if ($json['participantIdentities'][$p]['player']["summonerName"] === $arraySumonnerName[$v]) {
                        
                         $gameId = $json["gameId"];
