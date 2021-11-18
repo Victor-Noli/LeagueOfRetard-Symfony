@@ -15,7 +15,7 @@ class OverViewController extends AbstractController
     /**
      * @Route("/over/view", name="over_view")
      */
-    public function index(DocumentManager $dm): Response
+    public function overViewUser(DocumentManager $dm): Response
     {
         $role = $dm->getRepository(Role::class)->findBy([]);
         $lane = $dm->getRepository(Lane::class)->findBy([]);
@@ -40,7 +40,7 @@ class OverViewController extends AbstractController
             'message' => 'Welcome to your new controller!',
             'path' => 'src/Controller/OverViewController.php',
             'role' => $role,
-            'role' => $lane,
+            'lane' => $lane,
             'countParty' => count($query),
         ]);
     }

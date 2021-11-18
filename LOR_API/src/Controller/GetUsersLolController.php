@@ -9,14 +9,15 @@ use Symfony\Component\Routing\Annotation\Route;
 use Doctrine\ODM\MongoDB\DocumentManager;
 use App\Document\InfosPersoLOL;
 use App\Document\Criterias;
+use App\Document\Lane;
 use App\Document\PlayerAlgo;
+use App\Document\Role;
 use Doctrine\ODM\MongoDB\DocumentRepository;
 
 class GetUsersLolController extends AbstractController
 {
     /**
      * @Route("/get/users/lol", name="get_users_lol")
-
      */
     public function index(DocumentManager $dm): Response
     {
@@ -25,7 +26,6 @@ class GetUsersLolController extends AbstractController
         $queryPlayerAlgo = $dm->getRepository(PlayerAlgo::class)->findBy([]);
         $queryMe = $dm->getRepository(InfosPersoLOL::class)->findBy(['pseudo' => 'azerty']);
         $queryComplementary = $dm->getRepository(Complementary::class)->findBy([]);
-
         return $this->json([
             'message' => 'Welcome to your new controller!',
             'path' => 'src/Controller/GetUsersLolController.php',
@@ -256,5 +256,43 @@ class GetUsersLolController extends AbstractController
      } else {
         return $this->toResult($arrayComplementaire, $arrayResultKda, $role, $champion, $lane, $arrayMyProfil, $arrayImportant, $dm, $queryPlayerAlgo, $queryComplementary, $queryCriteria);
      }
+    }
+
+    /**
+     * @Route("/get/user/overView/{user}", name="get_users_overView", methods={"GET","HEAD"})
+
+     */
+    public function overView(DocumentManager $dm, $user) {
+        if ($user) {
+        $role = $dm->getRepository(Role::class)->findBy([]);
+        $lane = $dm->getRepository(Lane::class)->findBy([]);
+        $query = $dm->getRepository(InfosPersoLOL::class)->findBy(['pseudo' => $user]);
+        for($i = 0; $i < count($role); $i++){
+            for($v = 0; $v < count($query); $v++){
+                 if ($role[$i]->{'role'} === $query[$v]->{'role'}){
+                    $role[$i]->{'count'} = $role[$i]->{'count'} + 1;
+                 }
+            }
+        }
+
+        for($i = 0; $i < count($lane); $i++){
+            for($v = 0; $v < count($query); $v++){
+                 if ($lane[$i]->{'lane'} === $query[$v]->{'lane'}){
+                    $lane[$i]->{'count'} = $lane[$i]->{'count'} + 1;
+                 }
+            }
+        }
+    } else {
+        $role = '';
+        $lane = '';
+        $query = [];
+    }
+        return $this->json([
+            'message' => 'Welcome to your new controller!',
+            'path' => 'src/Controller/GetUsersLolController.php',
+            'role' => $role,
+            'lane' => $lane,
+            'countParty' => count($query),
+        ]);
     }
 }
