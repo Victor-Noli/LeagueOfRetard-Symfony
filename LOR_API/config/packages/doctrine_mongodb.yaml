@@ -4,8 +4,15 @@ doctrine_mongodb:
     connections:
         default:
             server: '%env(resolve:MONGODB_URL)%'
+            # server: "%mongodb_server%"
             options: {}
-    default_database: '%env(resolve:MONGODB_DB)%'
+            # server: "mongodb://userAdmin:userAdmin@localhost:27017/database"
+            # options:
+            #     username: userAdmin
+            #     password: userAdmin
+            #     db: database
+    # default_database: '%env(resolve:MONGODB_DB)%'
+    default_database: database
     document_managers:
         default:
             auto_mapping: true

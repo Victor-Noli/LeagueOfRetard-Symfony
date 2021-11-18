@@ -6,10 +6,10 @@ use Doctrine\ODM\MongoDB\Mapping\Annotations as MongoDB;
 use Symfony\Component\Validator\Constraints as Assert;
 
     /**
-     * @MongoDB\Document(collection="infos_lol_api")
+     * @MongoDB\Document(collection="complementary")
      */
 
-    class InfosPersoLOL
+    class Complementary
     {
         /**
          * @MongoDB\Id
